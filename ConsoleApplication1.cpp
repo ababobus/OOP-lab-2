@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <string>
+
+
 class Matrix {
 protected:
     int rows = 3, cols = 4;
@@ -14,6 +16,11 @@ public:
     void set(size_t index, double value) {
         x[index] = value;
     }
+
+    Matrix() {
+        x = new double[rows * cols] {0};
+    }
+
     Matrix(const Matrix& v) {
         this->rows = v.rows;
         this->cols = v.cols;
@@ -61,7 +68,6 @@ public:
                 }
             }
         }
-
         delete[]x;
         return (*this);
     }
@@ -75,7 +81,7 @@ public:
     void Print() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                std::cout << x[i * cols + j] << "  "; //ширина поля, кол-во знаков после запятой
+                std::cout << x[i * cols + j] << "  "; //ширина поля, колво знаков после запятой
             }
             std::cout << "\n";
         }
@@ -86,7 +92,7 @@ public:
         Matrix transposed(cols, rows);
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                transposed(j, i) = (*this)(i, j);
+                transposed(j, i) = (*this)(i, j);//обращние к элементу текцщей матрицы, копирование
             }
         }
         return transposed;
@@ -105,6 +111,9 @@ public:
         }
         return sum;
     }
+    ~SquareMatrix() {
+        std::cout << "~SquareMatrix";
+    }
 };
 
 
@@ -116,10 +125,14 @@ int main()
 
     Matrix b = a.Transpose();
     b.Print();
+
+
     SquareMatrix m1(5);
     m1[2] = 4;
     SquareMatrix m2(5);
+    m2(3, 2) = 34;
     SquareMatrix sm = m1 + m2;
+
     sm.Print();
 	return 0;
 }
