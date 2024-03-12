@@ -3,107 +3,123 @@
 
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <cmath>
-
-using std::string;
-using std::ofstream;
-using std::stringstream;
-
-class SVG {
-private:
-	const string name;
-	ofstream f;
+class Matrix {
+protected:
+    int rows = 3, cols = 4;
+    double* x = nullptr;
 public:
-	SVG(string name) : name(name) {
-		f = ofstream(name);
-		f << "<svg width=\"500\" height=\"500\""
-			<< " xmlns=\"http://www.w3.org/2000/svg\">\n";
-	}
+    double get(size_t index) {
+        return x[index];
+    }
+    void set(size_t index, double value) {
+        x[index] = value;
+    }
+    Matrix(const Matrix& v) {
+        this->rows = v.rows;
+        this->cols = v.cols;
+        x = new double[rows * cols];
+        for (int i = 0; i < rows * cols; i++) {
+            x[i] = v.x[i];
+        }
+    }
 
-	void AddElement(string elem, string params) {
-		f << "<" << elem << " " << params << " />\n";
-	}
+    Matrix(int rows, int cols) {
+        this->rows = rows;
+        this->cols = cols;
+        x = new double[rows * cols] {0};
+        std::cout << "first elem try " << x[0] << "\n";
 
-	void Save() {
-		f << "</svg>";
-		f.close();
-	}
+    }
 
+    double& operator()(int i, int j) {// обращение по 2 индексам
+        if (i < 0 || i >= rows || j < 0 || j >= cols) {
+            std::cerr << "error 1!\n";
+            exit(1);
+        }
+        return x[i * cols + j];
+    }
+    
+
+    double& operator[](int i) const { //обращение по одному индексу
+        if (i < 0 || i >= rows) {
+            std::cerr << "error 2!\n";
+            exit(1);
+        }
+        return x[i];
+    }
+
+    Matrix& operator=(const Matrix& p) {
+        this->rows = p.rows;
+        this->cols = p.cols;
+        if (rows != p.rows || cols != p.cols || p.cols == 0 || p.rows == 0) {
+            x = new double[rows * cols];
+        }
+        else {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    x[i * cols + j] = p[i * cols + j];
+                }
+            }
+        }
+
+        delete[]x;
+        return (*this);
+    }
+
+    ~Matrix() {
+        std::cout << "~Matrix\n";
+        if (x != nullptr) {
+            delete[]x;
+        }
+    }
+    void Print() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                std::cout << x[i * cols + j] << "  "; //ширина поля, кол-во знаков после запятой
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }
+
+    Matrix Transpose() {
+        Matrix transposed(cols, rows);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                transposed(j, i) = (*this)(i, j);
+            }
+        }
+        return transposed;
+    }
 };
 
-class Figure {
-private:
-	int x = 50, y = 50;
-	string stroke = "black";  string fill = "green";
+class SquareMatrix : public Matrix {
 public:
-	virtual double Perimetr() = 0;
-	virtual double GetCenter() = 0;//центр
-	virtual double GetRightPoint() = 0; //середина правой стороны
-	virtual void AddTo(SVG& s) const = 0;
+    SquareMatrix(int n) : Matrix(n, n) {};
 
-
-	int GetX() const { return x; }
-	int GetY() const { return y; }
-
-	void SetX(int new_x) { x = new_x; }
-	void SetY(int new_y) { y = new_y; }
-
-	string GetFill() const { return fill; }
-	string GetStroke() const { return stroke; }
-
-	void SetFill(string color) { fill = color; }
-	void SetStroke(string color) { stroke = color; }
+    SquareMatrix operator+(const Matrix& p) const {
+        SquareMatrix sum(rows);
+        Matrix copy_old = p;
+        for (int i = 0; i < rows*rows; i++) {
+            sum.set(i, x[i] + copy_old.get(i));
+        }
+        return sum;
+    }
 };
-
-class Rectangle : public Figure {
-private:
-	int w = 70, h = 70;
-public:
-	Rectangle(int x, int y, int w, int h) {
-		SetX(x);
-		SetY(y);
-		this->w = w;
-		this->h = h;
-	}
-
-	void AddTo(SVG& s) const override {
-		stringstream p;
-		p << "x='" << GetX() - w / 2 << "' ";        p << "y='" << GetY() - h / 2 << "' ";
-		p << "width='" << w << "' ";        p << "height='" << h << "' ";
-		p << "stroke='" << GetStroke() << "' ";
-		p << "fill='" << GetFill() << "' ";
-		s.AddElement("rect", p.str());
-	}
-
-	double Perimetr() override {
-		return 2 * (w + h);
-	}
-	double GetCenter() override {
-		double centerX = (GetX() + w) / 2;
-		double centerY = (GetY() + h) / 2;
-		return centerX, centerY;
-	}
-	double GetRightPoint() override {
-		double rightX = w;
-		double rightY = (GetY() - h) / 2;
-		return rightX, rightY;
-	}
-};
-
 
 
 int main()
 {
-	SVG s("picture1.svg");
-	Rectangle r(20, 0, 70, 70);
-	r.SetFill("pink");
-	r.AddTo(s);
-	std::cout<< r.Perimetr();
+    Matrix a{ 3, 4 };
+    a(0, 1) = 2.6;
+    a.Print();
 
-
-	s.Save();
-	system("start picture1.svg");
+    Matrix b = a.Transpose();
+    b.Print();
+    SquareMatrix m1(5);
+    m1[2] = 4;
+    SquareMatrix m2(5);
+    SquareMatrix sm = m1 + m2;
+    sm.Print();
 	return 0;
 }
