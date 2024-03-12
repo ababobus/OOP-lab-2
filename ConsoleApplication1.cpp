@@ -97,11 +97,25 @@ public:
         }
         return transposed;
     }
+
+
 };
 
 class SquareMatrix : public Matrix {
+private: 
+    int n = 0;
 public:
-    SquareMatrix(int n) : Matrix(n, n) {};
+    //SquareMatrix(int n) : Matrix(n, n) {};
+
+    SquareMatrix() {
+        x = new double[n*n] {0};
+    }
+    SquareMatrix(int n) {
+        this->n = n;
+        x = new double[n*n] {0};
+        std::cout << "first elem try " << x[0] << "\n";
+
+    }
 
     SquareMatrix operator+(const Matrix& p) const {
         SquareMatrix sum(rows);
@@ -112,7 +126,27 @@ public:
         return sum;
     }
     ~SquareMatrix() {
-        std::cout << "~SquareMatrix";
+        std::cout << "~SquareMatrix\n";
+    }
+};
+
+class Third : public Matrix {
+private:
+    SquareMatrix* p1;
+public:
+    Third() {
+        p1 = new SquareMatrix;
+    }
+    Third(int x) {
+        p1 = new SquareMatrix(x);
+    }
+    Third(const Third& t) {
+        p1 = new SquareMatrix(*(t.p1));
+    }
+
+    ~Third() {
+        delete p1;
+        std::cout << "~Third\n";
     }
 };
 
@@ -123,16 +157,21 @@ int main()
     a(0, 1) = 2.6;
     a.Print();
 
-    Matrix b = a.Transpose();
-    b.Print();
+    Matrix* b = new SquareMatrix(5);
+    SquareMatrix* c = new SquareMatrix(5);
 
+    Third* d = new Third(3);
+    d->Print();
+    //SquareMatrix m1(5);
+    //m1[2] = 4;
+    //SquareMatrix m2(5);
+    //m2(3, 2) = 34;
+    //SquareMatrix sm = m1 + m2;
 
-    SquareMatrix m1(5);
-    m1[2] = 4;
-    SquareMatrix m2(5);
-    m2(3, 2) = 34;
-    SquareMatrix sm = m1 + m2;
+    //sm.Print();
 
-    sm.Print();
+    delete b;
+    delete c;
+    delete d;
 	return 0;
 }
